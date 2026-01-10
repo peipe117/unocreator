@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>華語教學 UNO 生成器 (大字/彈性數量版)</title>
+    <style>
+        /* ==================== 
+           CSS 樣式設定
+           ==================== */
+        :root {
+            /* Letter Size 尺寸設定 */
+            --card-width: 58mm;
+            --card-height: 82mm;
+            --red: #FF5555;
+            --yellow: #FFAA00;
+            --green: #55AA55;
+            --blue: #5555FF;
+            --black: #222222;
+        }
+
+        body {
+            font-family: "Microsoft YaHei", "Heiti TC", "KaiTi", sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* 控制面板 */
+        .control-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto 30px auto;
+        }
+
+        h1 { margin-top: 0; color: #333; text-align: center; }
+
+        /* 教學建議區塊 */
+        .tips-box {
+            background-color: #e3f2fd;
+            border-left: 5px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #444;
+        }
+        .tips-box strong { color: #0d47a1; }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            margin: 10px 0;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+
+        /* 選項區塊 */
+        .options-area {
+            background-color: #fff3e0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 1px solid #ffe0b2;
+            text-align: left; /* 改為靠左對齊較整齊 */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center; /* 內容置中 */
+        }
+        
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 16px; /* 字體微調 */
+            font-weight: bold;
+            color: #e65100;
+        }
+        
+        .checkbox-label input {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .btn-group { text-align: center; margin-top: 15px; }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            text-align: center;
+            font-size: 16px;
+            margin: 0 5px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        button:hover { opacity: 0.9; }
+        button.print-btn { background-color: #2196F3; }
+
+        /* 卡片顯示區域 */
+        #card-container {
+            display: grid;
+            grid-template-columns: repeat(3, var(--card-width));
+            gap: 4mm;
+            justify-content: center;
+            width: 200mm;
+            margin: 0 auto;
+        }
+
+        /* 卡片本體 */
+        .card {
+            width: var(--card-width);
+            height: var(--card-height);
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            position: relative;
+            box-sizing: border-box;
+            overflow: hidden; 
+            page-break-inside: avoid;
+            background-clip: padding-box;
+        }
+
+        .card-inner {
+            position: absolute;
+            top: 5px; left: 5px; right: 5px; bottom: 5px;
+            border-radius: 6px;
+        }
+
+        /* 白色橢圓 */
+        .card-oval {
+            position: absolute;
+            top: 12%; left: 8%; width: 84%; height: 76%;
+            background: white;
+            border-radius: 50%;
+            transform: rotate(-10deg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+
+        /* 中間文字容器 */
+        .text-container {
+            transform: rotate(10deg);
+            text-align: center;
+            width: 100%;
+        }
+
+        /* 中文大字 */
+        .main-text {
+            font-size: 28px;
+            font-weight: bold;
+            line-height: 1.1;
+        }
+
+        /* 英文小字 */
+        .eng-text {
+            font-size: 12px;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .text-long { font-size: 20px; }
+
+        /* 角落數字/符號 */
+        .corner-text {
+            position: absolute;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+            line-height: 1;
+            font-family: Arial, sans-serif;
+        }
+        .top-left { top: 8px; left: 8px; }
+        .bottom-right { bottom: 8px; right: 8px; transform: rotate(180deg); }
+
+        /* 角落小字提示 (已放大) */
+        .corner-small {
+            position: absolute;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .small-tl { top: 36px; left: 8px; } 
+        .small-br { bottom: 36px; right: 8px; transform: rotate(180deg); }
+
+        /* ==================== 
+           列印設定
+           ==================== */
+        .print-footer {
+            display: none;
+        }
+
+        @media print {
+            @page {
+                size: letter portrait;
+                margin: 10mm;
+            }
+
+            body { background: white; padding: 0; }
+            .control-panel { display: none; }
+            
+            #card-container { 
+                width: 100%; 
+                gap: 2mm; 
+                padding-bottom: 30px; 
+            }
+            
+            .card { border: 1px solid #ddd; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            
+            .print-footer {
+                display: block !important;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                text-align: center;
+                font-size: 9pt;
+                color: #888;
+                background-color: white;
+                padding: 10px 0;
+                border-top: 1px solid #eee;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="control-panel">
+        <h1>🎴 華語教學 UNO 生成器 </h1>
+        
+        <div class="tips-box">
+            <strong>💡 老師的備課建議：</strong>
+            <ul style="margin: 5px 0 0 20px; padding: 0;">
+                <li style="margin-bottom: 5px;">
+                    <strong>深度學習 (10 個字)：</strong>輸入 10 個生字/詞，並勾選下方的「自動擴充顏色」。程式會自動產生 4 種顏色的卡片。
+                </li>
+                <li>
+                    <strong>廣度複習 (40 個字)：</strong>輸入 40 個不同生字/詞，不要勾選擴充。程式會確保數字與顏色分佈均勻。
+                </li>
+            </ul>
+        </div>
+
+        <p>請輸入生字/詞 (一行一個，或用逗號隔開)：</p>
+        <textarea id="vocabInput" placeholder="華&#10;說&#10;對&#10;星&#10;期">
+華
+說
+對
+星
+期
+會
+每
+給
+如
+果</textarea>
+        
+        <div class="options-area">
+            <label class="checkbox-label">
+                <input type="checkbox" id="expandColors" checked>
+                🔄 自動擴充為 4 種顏色 (製作完整牌組)
+            </label>
+            
+            <!-- 新增：精簡模式選項 -->
+            <label class="checkbox-label" style="color: #2e7d32;">
+                <input type="checkbox" id="singleSet">
+                📉 精簡模式 (每種卡片只做 1 張，省紙用)
+            </label>
+            
+            <div style="font-size: 13px; color: #666; margin-top: 5px; font-weight: normal; text-align: center;">
+                標準模式 (未勾選精簡) = 約 112 張牌<br>
+                精簡模式 (已勾選精簡) = 約 60 張牌
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button onclick="generateCards()">1. 生成卡牌</button>
+            <button class="print-btn" onclick="window.print()">2. 列印 (存成PDF)</button>
+        </div>
+        
+        <div style="margin-top: 15px; font-size: 13px; color: #666; text-align: center;">
+            ⚠️ 列印提醒：請勾選「背景圖形」，將邊界設為「預設」或「0.5英吋」即可完美列印。
+        </div>
+
+        <div style="margin-top: 20px; font-size: 14px; color: #888; text-align: center; border-top: 1px solid #eee; padding-top: 10px;">
+            Sophia Wong 修訂
+        </div>
+    </div>
+
+    <div id="card-container"></div>
+    
+    <div class="print-footer">Sophia Wong 修訂</div>
+
+    <script>
+        const COLORS = [
+            { code: '#FF5555', name: 'red' },
+            { code: '#FFAA00', name: 'yellow'},
+            { code: '#55AA55', name: 'green' },
+            { code: '#5555FF', name: 'blue' }
+        ];
+        const BLACK = '#222222';
+
+        const ENG_MAP = {
+            "跳過": "SKIP",
+            "反轉": "REVERSE",
+            "+2": "DRAW 2",
+            "萬用": "WILD",
+            "+4": "DRAW 4"
+        };
+
+        function createCardHTML(text, colorCode, type, numberVal) {
+            let textClass = "main-text";
+            if (text.length > 3) textClass += " text-long";
+
+            let cornerContent = (type === 'word') ? numberVal : text;
+            if (type === 'action' && text === '跳過') cornerContent = '⊘';
+            if (type === 'action' && text === '反轉') cornerContent = '⇄';
+            if (type === 'wild' && text === '萬用') cornerContent = '★';
+
+            let smallTextHTML = "";
+            if (type === 'word') {
+                smallTextHTML = `
+                    <div class="corner-small small-tl">${text}</div>
+                    <div class="corner-small small-br">${text}</div>
+                `;
+            }
+
+            let textColor = (type === 'wild') ? 'black' : colorCode;
+            let englishSubtitle = "";
+            if (type !== 'word' && ENG_MAP[text]) {
+                englishSubtitle = `<div class="eng-text" style="color: ${textColor}">${ENG_MAP[text]}</div>`;
+            }
+
+            return `
+                <div class="card">
+                    <div class="card-inner" style="background-color: ${colorCode};"></div>
+                    <div class="card-oval">
+                        <div class="text-container">
+                            <div class="${textClass}" style="color: ${textColor}">${text}</div>
+                            ${englishSubtitle}
+                        </div>
+                    </div>
+                    
+                    <div class="corner-text top-left">${cornerContent}</div>
+                    <div class="corner-text bottom-right">${cornerContent}</div>
+                    ${smallTextHTML}
+                </div>
+            `;
+        }
+
+        function generateCards() {
+            const input = document.getElementById('vocabInput').value;
+            const vocabList = input.replace(/\n/g, ',').split(',').map(w => w.trim()).filter(w => w);
+            const expandColors = document.getElementById('expandColors').checked;
+            const singleSet = document.getElementById('singleSet').checked;
+
+            if (vocabList.length === 0) {
+                alert("請至少輸入一個生字/詞！");
+                return;
+            }
+
+            // 防呆機制
+            if (expandColors && !singleSet && vocabList.length > 20) {
+                const confirmLarge = confirm(`⚠️ 注意：將生成超過 ${vocabList.length * 8} 張卡！確定嗎？\n(建議勾選「精簡模式」或取消「擴充顏色」)`);
+                if (!confirmLarge) return;
+            }
+
+            let html = "";
+            let deck = [];
+
+            // 1. 生成生字/詞卡
+            vocabList.forEach((word, index) => {
+                const num = index % 10;
+                
+                if (expandColors) {
+                    // === 1. 擴充模式 (每個字給4個顏色) ===
+                    COLORS.forEach(colorObj => {
+                        deck.push({ text: word, color: colorObj.code, type: 'word', num: num });
+                        if (!singleSet) deck.push({ text: word, color: colorObj.code, type: 'word', num: num });
+                    });
+                } else {
+                    // === 2. 廣度模式 (每個字給1個顏色) ===
+                    let colorObj;
+                    if (vocabList.length >= 20) {
+                        const colorIndex = Math.floor(index / 10) % 4;
+                        colorObj = COLORS[colorIndex];
+                    } else {
+                        colorObj = COLORS[index % 4];
+                    }
+
+                    deck.push({ text: word, color: colorObj.code, type: 'word', num: num });
+                    if (!singleSet) deck.push({ text: word, color: colorObj.code, type: 'word', num: num });
+                }
+            });
+
+            // 2. 生成功能牌
+            const actions = ["跳過", "反轉", "+2"];
+            COLORS.forEach(colorObj => {
+                actions.forEach(action => {
+                    deck.push({ text: action, color: colorObj.code, type: 'action' });
+                    if (!singleSet) deck.push({ text: action, color: colorObj.code, type: 'action' });
+                });
+            });
+
+            // 3. 生成萬用牌 (萬用牌數量也隨精簡模式調整)
+            const wilds = ["萬用", "+4"];
+            wilds.forEach(wild => {
+                const count = singleSet ? 2 : 4; // 精簡模式給2張，標準給4張
+                for(let i=0; i<count; i++) {
+                    deck.push({ text: wild, color: BLACK, type: 'wild' });
+                }
+            });
+
+            deck.forEach(card => {
+                html += createCardHTML(card.text, card.color, card.type, card.num);
+            });
+
+            document.getElementById('card-container').innerHTML = html;
+        }
+
+        generateCards();
+    </script>
+</body>
+</html>
