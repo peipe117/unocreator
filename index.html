@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>華語教學 UNO 生成器</title>
+    <title>華語教學 UNO 生成器 (智慧大字版)</title>
     <style>
         /* ==================== 
            CSS 樣式設定
@@ -69,18 +69,18 @@
             border-radius: 8px;
             margin: 10px 0;
             border: 1px solid #ffe0b2;
-            text-align: left; /* 改為靠左對齊較整齊 */
+            text-align: left;
             display: flex;
             flex-direction: column;
             gap: 10px;
-            align-items: center; /* 內容置中 */
+            align-items: center;
         }
         
         .checkbox-label {
             display: flex;
             align-items: center;
             cursor: pointer;
-            font-size: 16px; /* 字體微調 */
+            font-size: 16px;
             font-weight: bold;
             color: #e65100;
         }
@@ -162,11 +162,18 @@
             width: 100%;
         }
 
-        /* 中文大字 */
+        /* 中文大字 (一般 2-3 字) */
         .main-text {
-            font-size: 28px;
+            font-size: 34px; /* 從 28px 放大到 34px */
             font-weight: bold;
-            line-height: 1.1;
+            line-height: 1.2;
+        }
+
+        /* 單一字特大號 (新樣式) */
+        .text-huge {
+            font-size: 52px; /* 單字專用超大字體 */
+            line-height: 1;  /* 緊縮行高以利垂直置中 */
+            margin-top: -3px; /* 微調視覺中心 */
         }
 
         /* 英文小字 */
@@ -179,7 +186,8 @@
             letter-spacing: 0.5px;
         }
         
-        .text-long { font-size: 20px; }
+        /* 長詞縮小 */
+        .text-long { font-size: 22px; }
 
         /* 角落數字/符號 */
         .corner-text {
@@ -194,7 +202,7 @@
         .top-left { top: 8px; left: 8px; }
         .bottom-right { bottom: 8px; right: 8px; transform: rotate(180deg); }
 
-        /* 角落小字提示 (已放大) */
+        /* 角落小字提示 */
         .corner-small {
             position: absolute;
             color: white;
@@ -281,7 +289,6 @@
                 🔄 自動擴充為 4 種顏色 (製作完整牌組)
             </label>
             
-            <!-- 新增：精簡模式選項 -->
             <label class="checkbox-label" style="color: #2e7d32;">
                 <input type="checkbox" id="singleSet">
                 📉 精簡模式 (每種卡片只做 1 張，省紙用)
@@ -330,7 +337,16 @@
 
         function createCardHTML(text, colorCode, type, numberVal) {
             let textClass = "main-text";
-            if (text.length > 3) textClass += " text-long";
+            
+            // === 智慧字體調整 ===
+            // 只有 1 個字時，使用特大號字體
+            if (text.length === 1) {
+                textClass += " text-huge";
+            } 
+            // 超過 3 個字時，使用縮小字體
+            else if (text.length > 3) {
+                textClass += " text-long";
+            }
 
             let cornerContent = (type === 'word') ? numberVal : text;
             if (type === 'action' && text === '跳過') cornerContent = '⊘';
@@ -422,10 +438,10 @@
                 });
             });
 
-            // 3. 生成萬用牌 (萬用牌數量也隨精簡模式調整)
+            // 3. 生成萬用牌
             const wilds = ["萬用", "+4"];
             wilds.forEach(wild => {
-                const count = singleSet ? 2 : 4; // 精簡模式給2張，標準給4張
+                const count = singleSet ? 2 : 4; 
                 for(let i=0; i<count; i++) {
                     deck.push({ text: wild, color: BLACK, type: 'wild' });
                 }
